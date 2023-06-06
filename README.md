@@ -1,7 +1,19 @@
-# Vue 3 + Vite
+# UAV Simulator
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+某个无人机模拟器（低配版微软模拟飞行）
 
-## Recommended IDE Setup
+## 使用方式
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+* 使用你喜爱的方式`clone`此仓库
+
+  例如`git clone --depth=1 https://github.com/xubeiyan/uav-simulator`
+
+* 进入此仓库文件夹，安装依赖（推荐使用`pnpm`）
+
+  例如`cd uav-simulator && pnpm i`
+
+  > 由于`pnpm`不会主动返回旧版的`pnpm-lock.yaml`，如果你使用了低于`lockfileVersion: 5.4`的`pnpm`，请删掉`pnpm-lock.yaml`重新执行上面的`pnpm i`
+
+* 待安装成功后
+
+  执行`pnpm run dev`，打开浏览器，开始使用
