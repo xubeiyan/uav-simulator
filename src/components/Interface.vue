@@ -51,8 +51,12 @@ const props = defineProps(['position']);
             <td class="text-r">{{ $props.position.lati }}</td>
           </tr>
           <tr>
-            <td>高度</td>
+            <td>对地高度</td>
             <td class="text-r">{{ $props.position.height }}</td>
+          </tr>
+          <tr>
+            <td>地面海拔</td>
+            <td class="text-r">{{ $props.position.alt }}</td>
           </tr>
         </tbody>
       </table>
@@ -77,7 +81,7 @@ const props = defineProps(['position']);
   border-radius: .5em;
 }
 
-.position-data  td.text-r {
+.position-data td.text-r {
   text-align: right;
 }
 </style>

@@ -16,10 +16,11 @@ const position = reactive({
 })
 
 // 更新摄像机
-const updateCamera = ({ long, lati, height }) => {
+const updateCamera = ({ long, lati, height, alt }) => {
   position.long = long;
   position.lati = lati;
   position.height = height;
+  position.alt = alt;
 }
 </script>
 

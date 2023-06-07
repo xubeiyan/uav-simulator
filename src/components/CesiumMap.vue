@@ -37,7 +37,7 @@ const keyup = (e) => {
 window.addEventListener('keydown', keydown);
 window.addEventListener('keyup', keyup);
 
-onMounted(() => {
+onMounted(async () => {
   let west = 92.0;
   let south = 20.0;
   let east = 130.0;
@@ -51,9 +51,10 @@ onMounted(() => {
   // The URL on your server where CesiumJS's static files are hosted.
   window.CESIUM_BASE_URL = '/cesium';
   Cesium.Ion.defaultAccessToken = token;
+  const terrainProvider = await Cesium.createWorldTerrainAsync();
   // Initialize the Cesium Viewer in the HTML element with the "cesiumContainer" ID.
   viewer = new Cesium.Viewer('cesiummap', {
-    terrainProvider: Cesium.createWorldTerrain(),
+    terrainProvider,
     infoBox: false,
     timeline: false, // 时间滚动条控件
     animation: false, // 控制场景动画的播放速度控件
@@ -78,16 +79,25 @@ onMounted(() => {
     }
   });
 
-  viewer.clock.onTick.addEventListener(clock => {
+  viewer.clock.onTick.addEventListener(async clock => {
     const camera = viewer.camera;
-
+    // 相对地面高度
     const cameraHeight = camera.positionCartographic.height;
 
-    // 传出位置信息
-    emit('updateCamera', {
-      long: Cesium.Math.toDegrees(camera.positionCartographic.longitude).toFixed(8),
-      lati: Cesium.Math.toDegrees(camera.positionCartographic.latitude).toFixed(8),
-      height: camera.positionCartographic.height.toFixed(8),
+    const positions = [{
+      longitude: camera.positionCartographic.longitude,
+      latitude: camera.positionCartographic.latitude,
+    }];
+
+    // 计算此地的对地高度和海拔高度，由于sampleTerrainMostDetailed是一个promise，所以放到主循环种会造成卡顿
+    Cesium.sampleTerrainMostDetailed(terrainProvider, positions).then(updatedPositions => {
+      // 传出位置信息
+      emit('updateCamera', {
+        long: Cesium.Math.toDegrees(camera.positionCartographic.longitude).toFixed(8),
+        lati: Cesium.Math.toDegrees(camera.positionCartographic.latitude).toFixed(8),
+        height: (cameraHeight - updatedPositions[0].height).toFixed(8),
+        alt: updatedPositions[0].height.toFixed(8),
+      });
     });
 
     const moveRate = cameraHeight / 100.0;
@@ -113,7 +123,7 @@ onMounted(() => {
     if (flags.cameraLeft) {
       camera.setView({
         orientation: {
-          heading: camera.heading - 0.005,
+          heading: camera.heading - 0.01,
           pitch: camera.pitch,
           roll: camera.roll,
         }
@@ -122,7 +132,7 @@ onMounted(() => {
     if (flags.cameraRight) {
       camera.setView({
         orientation: {
-          heading: camera.heading + 0.005,
+          heading: camera.heading + 0.01,
           pitch: camera.pitch,
           roll: camera.roll,
         }
