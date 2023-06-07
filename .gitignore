@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 # cesiummap token
-src/cesiumMapToken.json
+/src/cesiumMapToken.json

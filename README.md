@@ -14,6 +14,12 @@
 
   > 由于`pnpm`不会主动返回旧版的`pnpm-lock.yaml`，如果你使用了低于`lockfileVersion: 5.4`的`pnpm`，请删掉`pnpm-lock.yaml`重新执行上面的`pnpm i`
 
-* 待安装成功后
+* 增加`cesiumMapToken.json`中的Cesium Ion Token
 
-  执行`pnpm run dev`，打开浏览器，开始使用
+  `cp src/cesiumMapToken.json.example src/cesiumMapToken.json`
+
+  编辑`cesiumMapToken.json`，将`your Cesium Ion Token`替换成你自己的Cesium Ion Token
+
+* 启动
+
+  执行`pnpm run dev`，打开浏览器访问`http://localhost:8899/`，开始使用
