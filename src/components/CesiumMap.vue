@@ -11,6 +11,53 @@ import { getFlagForKey, flags } from './uav_controller/keypress';
 
 // emit
 const emit = defineEmits(['updateCamera']);
+// props
+const props = defineProps(['points', 'drawStatus']);
+
+// 点对象
+let pointData = undefined;
+let lineEntity = undefined;
+
+// 清空所有entity
+const clearAllEntities = () => {
+  if (viewer == undefined) return;
+  if (pointData == undefined) return;
+  pointData.entities.removeAll();
+  if (lineEntity == undefined) return;
+  lineEntity.polyline.positions = [];
+}
+
+// 计算点的经纬度
+const computeLongLati = () => {
+  if (viewer == undefined) return;
+
+  let longlatiPos = props.points.map(point => {
+    let cart = Cesium.Cartographic.fromCartesian(point);
+
+    return {
+      long: Cesium.Math.toDegrees(cart.longitude),
+      lati: Cesium.Math.toDegrees(cart.latitude),
+      height: 5,
+    }
+  })
+
+  return longlatiPos;
+}
+
+// 跳至指定地点
+const flyTo = ({ long, lati, height }) => {
+  if (viewer == undefined) return;
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(long, lati, height),
+    orientation: {
+      heading: Cesium.Math.toRadians(0.0),
+      pitch: Cesium.Math.toRadians(-90.0),
+    }
+  });
+}
+
+// 暴露在外的方法
+defineExpose({ clearAllEntities, computeLongLati, flyTo });
 
 let viewer = undefined;
 
@@ -54,7 +101,7 @@ onMounted(async () => {
   const terrainProvider = await Cesium.createWorldTerrainAsync();
   // Initialize the Cesium Viewer in the HTML element with the "cesiumContainer" ID.
   viewer = new Cesium.Viewer('cesiummap', {
-    terrainProvider,
+    // terrainProvider,
     infoBox: false,
     timeline: false, // 时间滚动条控件
     animation: false, // 控制场景动画的播放速度控件
@@ -63,22 +110,76 @@ onMounted(async () => {
   // 去掉版权信息（喂）
   viewer._cesiumWidget._creditContainer.style.display = "none";
 
+  pointData = new Cesium.CustomDataSource('points');
+  viewer.dataSources.add(pointData);
+
   const scene = viewer.scene;
   // disable the default event handlers
-  scene.screenSpaceCameraController.enableRotate = false;
-  scene.screenSpaceCameraController.enableTranslate = false;
-  scene.screenSpaceCameraController.enableZoom = false;
-  scene.screenSpaceCameraController.enableTilt = false;
-  scene.screenSpaceCameraController.enableLook = false;
+  // scene.screenSpaceCameraController.enableRotate = false;
+  // scene.screenSpaceCameraController.enableTranslate = false;
+  // scene.screenSpaceCameraController.enableZoom = false;
+  // scene.screenSpaceCameraController.enableTilt = false;
+  // scene.screenSpaceCameraController.enableLook = false;
 
   viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(106.82828, 29.71735, 400),
+    destination: Cesium.Cartesian3.fromDegrees(82.8472369, 43.861348, 1000),
     orientation: {
       heading: Cesium.Math.toRadians(0.0),
-      pitch: Cesium.Math.toRadians(-15.0),
+      pitch: Cesium.Math.toRadians(-90.0),
     }
   });
 
+  const damLayer = viewer.imageryLayers.addImageryProvider(
+    new Cesium.IonImageryProvider({ assetId: 1830821 })
+  );
+
+  // 航迹线
+  lineEntity = viewer.entities.add({
+    polyline: {
+      positions: props.points,
+      material: new Cesium.PolylineOutlineMaterialProperty({
+        color: Cesium.Color.BLUE,
+        outlineColor: Cesium.Color.YELLOW,
+        outlineWidth: 1
+      }),
+      width: 5,
+      show: true
+    }
+  });
+
+  //create the screen space event handler
+  let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+  const pickPoint = (click) => {
+    // 不是drawing状态则结束
+    if (props.drawStatus !== 'drawing') return;
+    const ray = viewer.camera.getPickRay(click.position);
+    let cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+
+    if (cartesian == undefined) {
+      return;
+    }
+
+    // 画点
+    pointData.entities.add({
+      description: 'Preview Point For Path Creation',
+      position: cartesian,
+      point: {
+        pixelSize: 10,
+        color: Cesium.Color.RED,
+        heightReference: Cesium.HeightReference.NONE,
+      }
+    });
+
+    // 画航线
+    props.points.push(cartesian);
+    lineEntity.polyline.positions = props.points;
+  }
+
+  //set the input action to pick point on the earth\point cloud on left click
+  handler.setInputAction(pickPoint, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  // 按键
   viewer.clock.onTick.addEventListener(async clock => {
     const camera = viewer.camera;
     // 相对地面高度

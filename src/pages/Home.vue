@@ -1,11 +1,12 @@
 <template>
   <div class="container">
-    <Interface :position="position"/>
-    <CesiumMap @updateCamera="updateCamera" />
+    <Interface :position="position" @changeDrawerStatus="changeDrawerStatus" @clearDrawPoints="clearDrawPoints"
+      @flyTo="flyTo" @downloadDrawPoints="downloadDrawPoints" :points="drawer.points" :drawStatus="drawer.status" :longLatiPos="drawer.longLatiPos" />
+    <CesiumMap ref="cesiumMapRef" @updateCamera="updateCamera" :points="drawer.points" :drawStatus="drawer.status" />
   </div>
 </template>
 <script setup>
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import CesiumMap from '../components/CesiumMap.vue';
 import Interface from '../components/Interface.vue';
 
@@ -13,7 +14,56 @@ const position = reactive({
   long: null,
   lati: null,
   height: null,
-})
+});
+
+// 地图
+const cesiumMapRef = ref();
+
+// 绘制线的内容
+const drawer = reactive({
+  status: 'notdrawing',
+  points: [],
+  longLatiPos: [],
+});
+
+// 改变绘制状态
+const changeDrawerStatus = (status) => {
+  // console.log('change!')
+  drawer.status = status;
+}
+
+// 清除点
+const clearDrawPoints = () => {
+  drawer.points = [];
+  drawer.longLatiPos = [];
+  cesiumMapRef.value.clearAllEntities();
+}
+
+// 下载点坐标
+const downloadDrawPoints = () => {
+  const longLatiPos = cesiumMapRef.value.computeLongLati();
+  drawer.longLatiPos = longLatiPos;
+}
+
+// 跳至对应点
+const flyTo = (name) => {
+  const posLists = {
+    'bitcq': {
+      long: 106.82992253,
+      lati: 29.722210836,
+      height: 200,
+    },
+    'dam': {
+      long: 82.8472369,
+      lati: 43.861348,
+      height: 500,
+    }
+  }
+
+  if (posLists[name] == undefined) return;
+
+  cesiumMapRef.value.flyTo({ long: posLists[name].long, lati: posLists[name].lati, height: posLists[name].height });
+}
 
 // 更新摄像机
 const updateCamera = ({ long, lati, height, alt }) => {
