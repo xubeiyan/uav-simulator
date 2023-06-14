@@ -133,6 +133,11 @@ onMounted(async () => {
     new Cesium.IonImageryProvider({ assetId: 1830821 })
   );
 
+  const bitcq = viewer.imageryLayers.addImageryProvider(
+    new Cesium.IonImageryProvider({ assetId: 1835084 })
+  );
+
+
   // 航迹线
   lineEntity = viewer.entities.add({
     polyline: {
