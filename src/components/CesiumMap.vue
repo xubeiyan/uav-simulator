@@ -35,8 +35,8 @@ const computeLongLati = () => {
     let cart = Cesium.Cartographic.fromCartesian(point);
 
     return {
-      long: Cesium.Math.toDegrees(cart.longitude),
-      lati: Cesium.Math.toDegrees(cart.latitude),
+      longitude: Cesium.Math.toDegrees(cart.longitude),
+      latitude: Cesium.Math.toDegrees(cart.latitude),
       height: 5,
     }
   })

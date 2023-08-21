@@ -10,6 +10,8 @@ import { reactive, ref } from 'vue';
 import CesiumMap from '../components/CesiumMap.vue';
 import Interface from '../components/Interface.vue';
 
+import axios from 'axios';
+
 const position = reactive({
   long: null,
   lati: null,
@@ -43,6 +45,14 @@ const clearDrawPoints = () => {
 const downloadDrawPoints = () => {
   const longLatiPos = cesiumMapRef.value.computeLongLati();
   drawer.longLatiPos = longLatiPos;
+
+  axios.post('http://10.1.123.248:6789/kmz/outPut', {
+    coordinateVos: longLatiPos,
+  }).then(res => {
+
+  }).catch(e => {
+    console.log(e)
+  })
 }
 
 // 跳至对应点
